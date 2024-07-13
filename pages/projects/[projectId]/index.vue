@@ -1,6 +1,6 @@
 <template>
-    <div class="flex items-end justify-between mb-8">
-        <h1 class="text-primary font-bold text-4xl">{{ config.title }}-{{ project.id }}</h1>
+    <div class="flex items-center  justify-between mb-8">
+        <h1 class="text-primary font-bold text-2xl">{{project.name }}-{{ project.id }}</h1>
         <span class="pi pi-cog hover:text-primary"></span>
     </div>
 
@@ -39,12 +39,8 @@
 <script setup>
 const toast = useToast();
 const route = useRoute();
-console.log(route.params.projectId)
-console.log(route)
-const { data: config } = await useFetch('/api/config')
-const { data: project, execute: updatePage } = await useFetch(`/api/projects/${route.params.projectId}`, {
-    query: { projectId: 'projectId' }
-})
+
+const { data: project, execute: updatePage } = await useFetch(`/api/projects/${route.params.projectId}`)
 
 const visible = ref(false);
 
