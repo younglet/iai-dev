@@ -1,6 +1,6 @@
 <template>
     <div class="flex items-center  justify-between mb-8">
-        <h1 class="text-primary font-bold text-2xl">{{project.name }}-{{ project.id }}</h1>
+        <h1 class="text-primary font-bold text-2xl">{{ project.name }}-{{ project.id }}</h1>
         <span class="pi pi-cog hover:text-primary"></span>
     </div>
 
@@ -10,10 +10,11 @@
         <NuxtLink v-for="(animation, index) in project.animations" :key="index"
             :to="{ path: `/projects/${project.id}/animations/${animation.id}` }">
             <div
-                class="flex  border px-8  items-center group justify-between gap-4 p-4 rounded-xl border-1 border-surface-200 dark:border-surface-600 hover:bg-primary hover:text-white">
+                class="flex  border px-8  items-center group justify-between gap-4 p-4 rounded-xl border-1 border-primary dark:border-surface-600 hover:bg-primary hover:text-white">
                 <i class="pi pi-slack text-primary group-hover:text-white group-hover:border-0"></i>
                 <div class="flex-1 flex items-start group-hover:text-white group-hover:border-0">
-                    {{ animation.name }}
+                    <h3 class="text-primary font-bold">{{ animation.name }}</h3>
+                    <span class="ml-10 text-slate-500">{{ animation.keyFrames.length }}</span>
                 </div>
             </div>
         </NuxtLink>
