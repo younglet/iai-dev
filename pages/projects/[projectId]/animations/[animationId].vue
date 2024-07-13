@@ -92,7 +92,7 @@ const frame = animation.value.keyFrames.length > 0 ?
 
 const saveFrametoKeyFrames = () => {
     const body = { project: project.value }
-    animation.value.keyFrames.push({ id: nanoid, devices: frame.value })
+    animation.value.keyFrames.push({ id: nanoid(), devices: frame.value })
     $fetch(`/api/projects/${route.params.projectId}`, {
         method: 'POST',
         body
@@ -123,7 +123,7 @@ const deleteKeyFrame = (frame) => {
             label: '删除',
             severity: 'danger'
         },
-        
+
         accept: () => {
             animation.value.keyFrames = animation.value.keyFrames.filter(item => item.id !== frame.id)
             $fetch(`/api/projects/${route.params.projectId}`, {
