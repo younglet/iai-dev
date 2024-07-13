@@ -12,6 +12,7 @@
   "dependencies": {
     "nanoid": "^5.0.7",
     "nuxt": "^3.12.3",
+    "primeicons": "^7.0.0",
     "primevue": "^3",
     "vue": "latest"
   },
