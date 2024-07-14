@@ -7,10 +7,6 @@
             <h1 class="text-primary font-bold text-2xl"> {{ project.name }}-{{ animation.name }}</h1>
         </div>
         <div class="flex gap-2 items-center">
-            <Button class="w-24" label="Delete" severity="danger" outlined>
-                <i class="pi pi-delete-left text-red-500 mr-2"></i>
-                删除
-            </Button>
             <Button class="w-24" size="small" severity="help" @click="send(JSON.stringify(frame))">
                 <i class="pi pi-send text-white mr-2"></i>
                 测试
@@ -42,7 +38,8 @@
                         <h3 class="text-primary">{{ item.label }}</h3>
                         <div class="text-gray-500 ml-4">
                             <span>
-                                100
+                                {{ devices.find(device => device.id === idx) ? devices.find(device => device.id ===
+                                    idx)[item.name] : '暂无数据' }}
                             </span>
                             <span>
                                 {{ item.unit }}
@@ -52,7 +49,8 @@
                 </div>
             </div>
             <div class=" text-xs text-gray-500 text-center" style="font-size: 14px;">
-                上次更新时间：2024年7月14日 02:07:43
+                上次更新 : {{ devices.find(device => device.id === idx) ? useTimeAgo(devices.find(device => device.id ===
+                    idx).updateTime) : '暂无数据' }}
             </div>
         </div>
         <hr>
@@ -76,6 +74,7 @@
 <script setup>
 import { computed } from 'vue';
 import { nanoid } from 'nanoid'
+
 const confirm = useConfirm();
 const toast = useToast();
 const route = useRoute()
@@ -119,6 +118,7 @@ const deleteKeyFrame = (frame) => {
             severity: 'secondary',
             outlined: true
         },
+        acceptLabel: '删除',
         acceptProps: {
             label: '删除',
             severity: 'danger'
@@ -130,12 +130,26 @@ const deleteKeyFrame = (frame) => {
                 method: 'POST',
                 body: { project: project.value }
             })
-            toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Record deleted', life: 3000 });
+            toast.add({ severity: 'success', summary: '成功删除', detail: '你已经成功删除了', life: 3000 });
         },
         reject: () => {
-            toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
+            toast.add({ severity: 'info', summary: '取消删除', detail: '你已经取消删除了', life: 3000 });
         }
     });
 
 }
+
+import { useWebSocket } from '@vueuse/core'
+import { useTimeAgo } from '@vueuse/core'
+
+
+const { data, send } = useWebSocket('ws://192.168.31.205:3000/api/ws/devices')
+const devices = ref([])
+onMounted(() => {
+    setInterval(() => {
+        send('GET devices data')
+        devices.value = JSON.parse(data.value).devices
+    }, 1000)
+})
+
 </script>
