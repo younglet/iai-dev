@@ -21,8 +21,10 @@
     <Button @click="randomFrame()">随机</Button>
     <hr>
     <div class="grid grid-cols-5 gap-4 justify-center items-center mt-12">
-        <div v-for="device, idx in frame" class="text-left w-56 h-56 border shadow-sm rounded-xl">
-            <h2 class="font-bold text-white bg-primary text-center p-2 text-xl rounded-t-xl">Device {{ idx }}</h2>
+        <div v-for="device, idx in frame" class="text-left w-42 h-56 border shadow-sm rounded-xl">
+
+            <h2 class="font-bold text-white text-center p-2 text-xl rounded-t-xl"
+                :class="isActive(idx) ? 'bg-primary' : 'bg-slate-500'">Device {{ idx }} {{ isActive(idx) }}</h2>
             <div class="flex flex-col ">
                 <div v-for="item, index in project.config.params.output" class="p-4 flex items-center justify-between">
                     <span class="text-primary">{{ item.name }}</span>
@@ -147,9 +149,18 @@ const { data, send } = useWebSocket('ws://192.168.31.205:3000/api/ws/devices')
 const devices = ref([])
 onMounted(() => {
     setInterval(() => {
-        send('GET devices data')
+        send({ type: 'web' })
         devices.value = JSON.parse(data.value).devices
     }, 1000)
 })
+
+
+const isActive = (idx) => {
+    if (devices.value.find(device => device.id === idx)) {
+        return true
+    } else {
+        return false
+    }
+}
 
 </script>
