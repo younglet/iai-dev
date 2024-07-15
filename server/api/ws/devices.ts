@@ -2,11 +2,11 @@ let frontEnds = []
 
 export default defineWebSocketHandler({
     open(peer) {
-        console.log("[web] open", peer);
+        console.log("[frontEnd] open", peer);
         frontEnds.push(peer)
     },
     async message(peer, message) {
-        console.log("[web] open", message);
+        console.log("[frontEnd] send", message);
         const devicesInfo = await useStorage('data').getItem('devices')
         await useStorage('data').setItem('devices', devicesInfo)
         frontEnds.forEach(frontEnd => { frontEnd.send(devicesInfo) })

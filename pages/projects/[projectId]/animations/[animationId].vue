@@ -7,7 +7,7 @@
             <h1 class="text-primary font-bold text-2xl"> {{ project.name }}-{{ animation.name }}</h1>
         </div>
         <div class="flex gap-2 items-center">
-            <Button class="w-24" size="small" severity="help" @click="send(JSON.stringify(frame))">
+            <Button class="w-24" size="small" severity="help" @click="send(JSON.stringify({ type:'frontEnd',frame:frame}))">
                 <i class="pi pi-send text-white mr-2"></i>
                 测试
             </Button>
@@ -18,13 +18,13 @@
             <span class="pi pi-cog hover:text-primary text-2xl"></span>
         </div>
     </div>
-    <Button @click="randomFrame()">随机</Button>
+
     <hr>
     <div class="grid grid-cols-5 gap-4 justify-center items-center mt-12">
         <div v-for="device, idx in frame" class="text-left w-42 h-56 border shadow-sm rounded-xl">
 
             <h2 class="font-bold text-white text-center p-2 text-xl rounded-t-xl"
-                :class="isActive(idx) ? 'bg-primary' : 'bg-slate-500'">Device {{ idx }} {{ isActive(idx) }}</h2>
+                :class="isActive(idx) ? 'bg-primary' : 'bg-slate-500'">Device {{ idx }}</h2>
             <div class="flex flex-col ">
                 <div v-for="item, index in project.config.params.output" class="p-4 flex items-center justify-between">
                     <span class="text-primary">{{ item.name }}</span>
@@ -68,6 +68,13 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <div ref="floatPanel" :style="style" style="position: fixed" class="bg-white size-48 rounded-xl shadow-xl border">
+        <h3 class="text-primary font-bold  text-center p-2">快速操作</h3>
+        <hr>
+        <div class="p-4 ">
+            <Button @click="randomFrame()" size="small">随机</Button>
         </div>
     </div>
 </template>
@@ -144,12 +151,16 @@ const deleteKeyFrame = (frame) => {
 import { useWebSocket } from '@vueuse/core'
 import { useTimeAgo } from '@vueuse/core'
 
+const { send } = useWebSocket('ws://192.168.31.205:3000/api/ws')
 
-const { data, send } = useWebSocket('ws://192.168.31.205:3000/api/ws/devices')
+
+
+const { data, send: getDevicesData } = useWebSocket('ws://192.168.31.205:3000/api/ws/devices')
 const devices = ref([])
+await getDevicesData({ type: 'web' })
 onMounted(() => {
     setInterval(() => {
-        send({ type: 'web' })
+        getDevicesData({ type: 'web' })
         devices.value = JSON.parse(data.value).devices
     }, 1000)
 })
@@ -157,10 +168,24 @@ onMounted(() => {
 
 const isActive = (idx) => {
     if (devices.value.find(device => device.id === idx)) {
+        let now = new Date().getTime()
+        if (now - devices.value.find(device => device.id ===
+            idx).updateTime > 10000) {
+            return false
+        }
         return true
     } else {
         return false
     }
 }
 
+
+
+
+
+import { useDraggable } from '@vueuse/core'
+const floatPanel = ref(null)
+const { x, y, style } = useDraggable(floatPanel, {
+    initialValue: { x: 800, y: 400 },
+})
 </script>
