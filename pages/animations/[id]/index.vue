@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center justify-between mb-2">
         <div class="flex  justify-center items-center gap-4">
             <NuxtLink :to="{ path: `/` }">
                 <span class="pi pi-chevron-left text-gray-400 text-xl hover:text-primary" />
@@ -7,6 +7,11 @@
             <h1 class="text-primary font-bold text-2xl"> {{ animation.name }}</h1>
         </div>
         <div class="flex gap-2 items-center">
+            <Button class="w-32" size="small" severity="info"
+                @click="playAnimation()">
+                <i class="pi pi-slack text-white mr-2"></i>
+               播放动画
+            </Button>
             <Button class="w-32" size="small" severity="help"
                 @click="send(JSON.stringify({ type: 'frontEnd', frame: frame }))">
                 <i class="pi pi-send text-white mr-2"></i>
@@ -20,13 +25,12 @@
         </div>
     </div>
 
-    <hr>
 
-    <div class="grid grid-cols-6 gap-8 p-4 px-24">
+    <div class="grid grid-cols-6 gap-4 p-4 px-24">
         <div v-for="item, index in frame" class="bg-white rounded-md shadow-md border-b-4 border-primary">
-            <div class="flex p-4 justify-around">
+            <div class="flex p-2 justify-around">
 
-                <Slider v-model="frame[index].value" orientation="vertical" class="h-[14rem] w-2" :max="max"
+                <Slider v-model="frame[index].value" orientation="vertical" class="h-[10rem] w-2" :max="max"
                     :key="item.id" />
                 <div class="flex flex-col items-center justify-around">
                     <Button class="w-12" size="small" severity="secondary" @click="frame[index].value++">
@@ -42,19 +46,14 @@
         </div>
     </div>
 
-    <hr>
-    <div class="flex gap-4">
-
-        <div class="flex flex-row gap-4 p-6 ">
+    <div class=" px-24 border-t-4 pt-4 h-48 overflow-y-auto">
+        <div class="grid grid-cols-8 gap-4">
             <div class="grid  grid-cols-6 w-11/12" v-for="keyFrame, index in animation.keyFrames">
                 <div class="grid grid-cols-6 gap-4 p-4 w-28 hover:scale-110   border-b-4 shadow-md border-primary">
-                    <Slider v-model="keyFrame[index].value" orientation="vertical" class="h-[3rem]"
-                        v-for="item, index in keyFrame" :key="item.id" disabled />
+                    <Slider v-model="item.value" orientation="vertical" class="h-[3rem]"
+                        v-for="item, index in keyFrame.data" :key="item.id" disabled />
                 </div>
             </div>
-        </div>
-        <div>
-            <Button @click="playAnimation()">播放</Button>
         </div>
     </div>
 
@@ -113,19 +112,19 @@ const route = useRoute()
 const { data: animation } = await useFetch(`/api/animations/${route.params.id}`)
 
 const frame =
-    animation.value.keyFrames.length > min ?
-        ref(animation.value.keyFrames[animation.value.keyFrames.length - 1].map(item => ({ ...item }))) :
+    animation.value.keyFrames.length > 0 ?
+        ref(animation.value.keyFrames[animation.value.keyFrames.length - 1].data.map(item => ({ ...item }))) :
         ref(Array.from({ length: 12 }, (_, i) => ({ id: i, value: min })));
 
 const saveFrametoKeyFrames = async () => {
-    animation.value.keyFrames.push(frame.value.map(item => ({ ...item })))
+    animation.value.keyFrames.push({id:nanoid(), data:frame.value.map(item => ({ ...item }))})
     await $fetch(`/api/animations/${route.params.id}`, {
         method: 'POST',
         body: {
             animation: animation.value
         }
     })
-    toast.add({ severity: 'success', summary: '成功', detail: `你已成功保存当前关键帧`, life: 3000 });
+    toast.add({ severity: 'success', summary: '成功', detail: `你已成功保存当前关键帧`, life: 1000 });
 }
 const playAnimation = () => {
     let index = 1;
@@ -240,6 +239,7 @@ const frameRangeRandom = () => {
 
 
 import { useDraggable } from '@vueuse/core'
+import { nanoid } from 'nanoid';
 const floatPanel = ref(null)
 const { x, y, style } = useDraggable(floatPanel, {
     initialValue: { x:1300, y: 300 },
