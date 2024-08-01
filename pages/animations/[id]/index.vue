@@ -26,7 +26,7 @@
         <div v-for="item, index in frame" class="bg-white rounded-md shadow-md border-b-4 border-primary">
             <div class="flex p-4 justify-around">
 
-                <Slider v-model="frame[index].value" orientation="vertical" class="h-[14rem] w-2" :max="180"
+                <Slider v-model="frame[index].value" orientation="vertical" class="h-[14rem] w-2" :max="max"
                     :key="item.id" />
                 <div class="flex flex-col items-center justify-around">
                     <Button class="w-12" size="small" severity="secondary" @click="frame[index].value++">
@@ -58,10 +58,28 @@
         </div>
     </div>
 
+    <div ref="floatPanel" :style="style" style="position: fixed" class="bg-white w--48 h-72 rounded-xl shadow-xl border">
+        <h3 class="text-primary font-bold  text-center p-2">快速操作</h3>
+        <hr>
+        <div class="grid grid-cols-2 gap-2 p-4">
+            <Button @click="frameToRandom()" size="small">随机</Button>
+            <Button @click="frameToFull()" size="small">全开</Button>
+            <Button @click="frameToZero()" size="small">归零</Button>
+            <Button @click="frameDouble()" size="small">翻倍</Button>
+            <Button @click="frameIncrease()" size="small">+1</Button>
+            <Button @click="frameDecrease()" size="small">-1</Button>
+
+        </div>
+
+    </div>
+
 </template>
 
 
 <script setup>
+
+
+const toast = useToast();
 import { useWebSocket } from '@vueuse/core'
 
 const { send } = useWebSocket('ws://192.168.11.11:3000/api/ws')
@@ -76,14 +94,15 @@ const frame =
         ref(animation.value.keyFrames[animation.value.keyFrames.length - 1].map(item => ({ ...item }))) :
         ref(Array.from({ length: 12 }, (_, i) => ({ id: i, value: 0 })));
 
-const saveFrametoKeyFrames = () => {
+const saveFrametoKeyFrames = async () => {
     animation.value.keyFrames.push(frame.value.map(item => ({ ...item })))
-    $fetch(`/api/animations/${route.params.id}`, {
+    await $fetch(`/api/animations/${route.params.id}`, {
         method: 'POST',
         body: {
             animation: animation.value
         }
     })
+    toast.add({ severity: 'success', summary: '成功', detail: `你已成功保存当前关键帧`, life: 3000 });
 }
 const playAnimation = () => {
     let index = 1;
@@ -101,6 +120,44 @@ const playAnimation = () => {
     }, 1000);
 
 }
+
+
+const max = 180
+const min = 0
+const value = ref(0)
+const frameToRandom = () => {
+    frame.value = frame.value.map(item => ({ ...item, value: Math.floor(Math.random() * max) }))
+}
+
+const frameToZero = () => {
+    frame.value = frame.value.map(item => ({ ...item, value: 0 }))
+}   
+
+const frameToFull = () => {
+    frame.value = frame.value.map(item => ({ ...item, value: max }))
+}
+const frameDouble = () => {
+    frame.value = frame.value.map(item => ({ ...item, value: item.value * 2 }))
+    if (frame.value.every(item => item.value > max)) {
+        frame.value = frame.value.map(item => ({ ...item, value: max }))
+    }
+}
+
+const frameIncrease = () => {
+    frame.value = frame.value.map(item => ({ ...item, value: item.value + 1 }))
+    if(frame.value.every(item => item.value > max)) {
+        frame.value = frame.value.map(item => ({ ...item, value: max }))
+    }
+}
+
+const frameDecrease = () => {
+    frame.value = frame.value.map(item => ({ ...item, value: item.value - 1 }))
+    if(frame.value.every(item => item.value < 0)) {
+        frame.value = frame.value.map(item => ({ ...item, value: 0 }))
+    }
+}
+
+
 
 import { useDraggable } from '@vueuse/core'
 const floatPanel = ref(null)
