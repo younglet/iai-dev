@@ -7,10 +7,10 @@
             <h1 class="text-primary font-bold text-2xl"> {{ animation.name }}</h1>
         </div>
         <div class="flex gap-2 items-center">
-            <Button class="w-24" size="small" severity="help"
+            <Button class="w-32" size="small" severity="help"
                 @click="send(JSON.stringify({ type: 'frontEnd', frame: frame }))">
                 <i class="pi pi-send text-white mr-2"></i>
-                测试
+                同步状态
             </Button>
             <Button class="w-32" size="small" @click="saveFrametoKeyFrames()">
                 <i class="pi pi-camera text-white mr-2"></i>
@@ -63,15 +63,31 @@
         <hr>
         <div class="grid grid-cols-2 gap-2 p-4">
             <Button @click="frameToRandom()" size="small">随机</Button>
-            <Button @click="frameToFull()" size="small">全开</Button>
+            <Button @click="frameAlignToMax()" size="small">取高对齐</Button>
+            <Button @click="frameAlignToMin()" size="small">取低对齐</Button>
+            <Button @click="frameAlignToAverage()" size="small">平均对齐</Button>
+            <Button @click="frameToFull()" size="small">最大</Button>
             <Button @click="frameToZero()" size="small">归零</Button>
             <Button @click="frameDouble()" size="small">翻倍</Button>
+            <Button @click="frameHalf()" size="small">减半</Button>
             <Button @click="frameIncrease()" size="small">+1</Button>
             <Button @click="frameDecrease()" size="small">-1</Button>
 
         </div>
 
     </div>
+
+    
+   <Dialog v-model:visible="visible" modal header="创建动画" :style="{ width: '25rem' }">
+       <span class="text-surface-500 dark:text-surface-400 block mb-8"></span>
+       <div class="flex items-center gap-4 mb-8">
+           <InputText class="flex-auto" v-model="body.animationName" autocomplete="off" placeholder="动画名称" />
+       </div>
+       <div class="flex justify-end gap-2">
+           <Button type="button" label="取消" severity="secondary" @click="visible = false"></Button>
+           <Button type="button" label="创建" @click=" create()"></Button>
+       </div>
+   </Dialog>
 
 </template>
 
@@ -90,9 +106,9 @@ const route = useRoute()
 const { data: animation } = await useFetch(`/api/animations/${route.params.id}`)
 
 const frame =
-    animation.value.keyFrames.length > 0 ?
+    animation.value.keyFrames.length > min ?
         ref(animation.value.keyFrames[animation.value.keyFrames.length - 1].map(item => ({ ...item }))) :
-        ref(Array.from({ length: 12 }, (_, i) => ({ id: i, value: 0 })));
+        ref(Array.from({ length: 12 }, (_, i) => ({ id: i, value: min })));
 
 const saveFrametoKeyFrames = async () => {
     animation.value.keyFrames.push(frame.value.map(item => ({ ...item })))
@@ -123,14 +139,19 @@ const playAnimation = () => {
 
 
 const max = 180
-const min = 0
-const value = ref(0)
+const min = 10
+const visible = ref(false)
+const adjustParams = ref({
+    max: max,
+    min: min,
+    value: 0
+})
 const frameToRandom = () => {
     frame.value = frame.value.map(item => ({ ...item, value: Math.floor(Math.random() * max) }))
 }
 
 const frameToZero = () => {
-    frame.value = frame.value.map(item => ({ ...item, value: 0 }))
+    frame.value = frame.value.map(item => ({ ...item, value: min }))
 }   
 
 const frameToFull = () => {
@@ -143,6 +164,13 @@ const frameDouble = () => {
     }
 }
 
+const frameHalf = () => {
+    frame.value = frame.value.map(item => ({ ...item, value: item.value / 2 }))
+    if (frame.value.every(item => item.value < min)) {
+        frame.value = frame.value.map(item => ({ ...item, value: min }))
+    }
+}
+
 const frameIncrease = () => {
     frame.value = frame.value.map(item => ({ ...item, value: item.value + 1 }))
     if(frame.value.every(item => item.value > max)) {
@@ -152,10 +180,27 @@ const frameIncrease = () => {
 
 const frameDecrease = () => {
     frame.value = frame.value.map(item => ({ ...item, value: item.value - 1 }))
-    if(frame.value.every(item => item.value < 0)) {
-        frame.value = frame.value.map(item => ({ ...item, value: 0 }))
+    if(frame.value.every(item => item.value < min)) {
+        frame.value = frame.value.map(item => ({ ...item, value: min }))
     }
 }
+
+const frameAlignToMax = ()=>{
+    const max = frame.value.map(item => item.value).reduce((a, b) => Math.max(a, b))
+    frame.value = frame.value.map(item => ({ ...item, value: max }))
+}
+
+const frameAlignToMin = ()=>{
+    const min = frame.value.map(item => item.value).reduce((a, b) => Math.min(a, b))
+    frame.value = frame.value.map(item => ({ ...item, value: min }))
+}
+
+const frameAlignToAverage = ()=>{
+    let average = frame.value.map(item => item.value).reduce((a, b) => a + b) / frame.value.length
+    average = Math.trunc(average)
+    frame.value = frame.value.map(item => ({ ...item, value: average }))
+}
+
 
 
 
