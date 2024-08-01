@@ -4,7 +4,7 @@
     <ConfirmDialog />
     <NuxtPage />
   </div>
-</template>>
+</template>
 
 
 <style>
