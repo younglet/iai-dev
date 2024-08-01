@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    <div ref="floatPanel" :style="style" style="position: fixed" class="bg-white w--48 h-72 rounded-xl shadow-xl border">
+    <div ref="floatPanel" :style="style" style="position: fixed" class="bg-white w-56 h-96 rounded-xl shadow-xl border">
         <h3 class="text-primary font-bold  text-center p-2">快速操作</h3>
         <hr>
         <div class="grid grid-cols-2 gap-2 p-4">
@@ -74,20 +74,27 @@
             <Button @click="frameDecrease()" size="small">-1</Button>
 
         </div>
+        <hr>
+        <div class="px-4 flex flex-col gap-2 mt-2">
+            <div class="flex gap-2 items-center">
+                <Button @click="frameTimesParamsValue" size="small" class="w-24">乘系数</Button>
+                <input type="number" v-model="adjustParams.value" max="2" min="0.1" step="0.1"
+                    class="w-10 h-6 border text-center" />
+            </div>
+            <div class="flex gap-2  items-center" id="range">
+                <Button @click="frameRangeRandom" size="small" class="w-18">范围随机</Button>
+                <input type="number" v-model="adjustParams.range[0]" max="2" min="0.1" step="0.1"
+                    class="w-10 h-6 border text-center" />
+                
+                <input type="number" v-model="adjustParams.range[1]" max="2" min="0.1" step="0.1"
+                    class="w-10 h-6 border text-center" />
+            </div>
+        </div>
 
     </div>
 
-    
-   <Dialog v-model:visible="visible" modal header="创建动画" :style="{ width: '25rem' }">
-       <span class="text-surface-500 dark:text-surface-400 block mb-8"></span>
-       <div class="flex items-center gap-4 mb-8">
-           <InputText class="flex-auto" v-model="body.animationName" autocomplete="off" placeholder="动画名称" />
-       </div>
-       <div class="flex justify-end gap-2">
-           <Button type="button" label="取消" severity="secondary" @click="visible = false"></Button>
-           <Button type="button" label="创建" @click=" create()"></Button>
-       </div>
-   </Dialog>
+
+
 
 </template>
 
@@ -140,19 +147,27 @@ const playAnimation = () => {
 
 const max = 180
 const min = 10
-const visible = ref(false)
 const adjustParams = ref({
-    max: max,
-    min: min,
-    value: 0
+    range: [min, min + 20],
+    value: 1.2
 })
+
+watch(
+    () => adjustParams.value.range,
+    (newRange) => {
+        if (newRange[0] > newRange[1]) {
+            adjustParams.value.range = [newRange[1], newRange[0]];
+        }
+    },
+    { deep: true }
+);
 const frameToRandom = () => {
     frame.value = frame.value.map(item => ({ ...item, value: Math.floor(Math.random() * max) }))
 }
 
 const frameToZero = () => {
     frame.value = frame.value.map(item => ({ ...item, value: min }))
-}   
+}
 
 const frameToFull = () => {
     frame.value = frame.value.map(item => ({ ...item, value: max }))
@@ -165,7 +180,7 @@ const frameDouble = () => {
 }
 
 const frameHalf = () => {
-    frame.value = frame.value.map(item => ({ ...item, value: item.value / 2 }))
+    frame.value = frame.value.map(item => ({ ...item, value: Math.trunc(item.value / 2) }))
     if (frame.value.every(item => item.value < min)) {
         frame.value = frame.value.map(item => ({ ...item, value: min }))
     }
@@ -173,40 +188,68 @@ const frameHalf = () => {
 
 const frameIncrease = () => {
     frame.value = frame.value.map(item => ({ ...item, value: item.value + 1 }))
-    if(frame.value.every(item => item.value > max)) {
+    if (frame.value.every(item => item.value > max)) {
         frame.value = frame.value.map(item => ({ ...item, value: max }))
     }
 }
 
 const frameDecrease = () => {
     frame.value = frame.value.map(item => ({ ...item, value: item.value - 1 }))
-    if(frame.value.every(item => item.value < min)) {
+    if (frame.value.every(item => item.value < min)) {
         frame.value = frame.value.map(item => ({ ...item, value: min }))
     }
 }
 
-const frameAlignToMax = ()=>{
+const frameAlignToMax = () => {
     const max = frame.value.map(item => item.value).reduce((a, b) => Math.max(a, b))
     frame.value = frame.value.map(item => ({ ...item, value: max }))
 }
 
-const frameAlignToMin = ()=>{
+const frameAlignToMin = () => {
     const min = frame.value.map(item => item.value).reduce((a, b) => Math.min(a, b))
     frame.value = frame.value.map(item => ({ ...item, value: min }))
 }
 
-const frameAlignToAverage = ()=>{
+const frameAlignToAverage = () => {
     let average = frame.value.map(item => item.value).reduce((a, b) => a + b) / frame.value.length
     average = Math.trunc(average)
     frame.value = frame.value.map(item => ({ ...item, value: average }))
 }
 
+const frameTimesParamsValue = () => {
+    frame.value = frame.value.map(item => ({ ...item, value: Math.trunc(item.value * adjustParams.value.value) }))
+    frame.value = frame.value.map(item => ({ ...item, value: item.value > max ? max : item.value }))
+    if (frame.value.every(item => item.value < min)) {
+        frame.value = frame.value.map(item => ({ ...item, value: min }))
+    }
+    if (frame.value.every(item => item.value > max)) {
+        frame.value = frame.value.map(item => ({ ...item, value: max }))
+    }
 
+}
+
+const frameRangeRandom = () => {
+    if (adjustParams.value.range[0] < min) {
+        adjustParams.value.range[0] = min
+    }
+    if (adjustParams.value.range[1] > max) {
+        adjustParams.value.range[1] = max
+    }
+    frame.value = frame.value.map(item => ({ ...item, value: Math.floor(Math.random() * (adjustParams.value.range[1] - adjustParams.value.range[0] + 1)) + adjustParams.value.range[0] }))
+}
 
 
 import { useDraggable } from '@vueuse/core'
 const floatPanel = ref(null)
 const { x, y, style } = useDraggable(floatPanel, {
-    initialValue: { x: 800, y: 400 },
+    initialValue: { x:1300, y: 300 },
 })
 </script>
+
+<style>
+#range input[type="number"]::-webkit-inner-spin-button,
+#range input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+</style>
