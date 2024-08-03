@@ -7,13 +7,12 @@
             <h1 class="text-primary font-bold text-2xl"> {{ animation.name }}</h1>
         </div>
         <div class="flex gap-2 items-center">
-            <Button class="w-32" size="small" severity="info"
-                @click="playAnimation()">
+            <Button class="w-32" size="small" severity="info" @click="playAnimation()">
                 <i class="pi pi-slack text-white mr-2"></i>
-               播放动画
+                播放动画
             </Button>
             <Button class="w-32" size="small" severity="help"
-                @click="send(JSON.stringify({ type: 'frontEnd', frame: frame }))">
+                @click="send(JSON.stringify({ type: 'setup', frame: frame }))">
                 <i class="pi pi-send text-white mr-2"></i>
                 同步状态
             </Button>
@@ -48,7 +47,9 @@
 
     <div class=" px-24 border-t-4 pt-4 h-48 overflow-y-auto">
         <div class="grid grid-cols-8 gap-4">
-            <div class="grid  grid-cols-6 w-11/12" v-for="keyFrame, index in animation.keyFrames">
+            <ConfirmPopup></ConfirmPopup>
+            <div class="grid  grid-cols-6 w-11/12" v-for="keyFrame, index in animation.keyFrames"
+                @click="deleteFromKeyFrames($event, keyFrame)">
                 <div class="grid grid-cols-6 gap-4 p-4 w-28 hover:scale-110   border-b-4 shadow-md border-primary">
                     <Slider v-model="item.value" orientation="vertical" class="h-[3rem]"
                         v-for="item, index in keyFrame.data" :key="item.id" disabled />
@@ -84,7 +85,7 @@
                 <Button @click="frameRangeRandom" size="small" class="w-18">范围随机</Button>
                 <input type="number" v-model="adjustParams.range[0]" max="2" min="0.1" step="0.1"
                     class="w-10 h-6 border text-center" />
-                
+
                 <input type="number" v-model="adjustParams.range[1]" max="2" min="0.1" step="0.1"
                     class="w-10 h-6 border text-center" />
             </div>
@@ -101,11 +102,10 @@
 <script setup>
 
 
-const toast = useToast();
 import { useWebSocket } from '@vueuse/core'
-
 const { send } = useWebSocket('ws://192.168.11.11:3000/api/ws')
-
+const toast = useToast();
+const confirm = useConfirm()
 
 
 const route = useRoute()
@@ -117,7 +117,7 @@ const frame =
         ref(Array.from({ length: 12 }, (_, i) => ({ id: i, value: min })));
 
 const saveFrametoKeyFrames = async () => {
-    animation.value.keyFrames.push({id:nanoid(), data:frame.value.map(item => ({ ...item }))})
+    animation.value.keyFrames.push({ id: nanoid(), data: frame.value.map(item => ({ ...item })) })
     await $fetch(`/api/animations/${route.params.id}`, {
         method: 'POST',
         body: {
@@ -126,14 +126,45 @@ const saveFrametoKeyFrames = async () => {
     })
     toast.add({ severity: 'success', summary: '成功', detail: `你已成功保存当前关键帧`, life: 1000 });
 }
+
+const deleteFromKeyFrames = async (event, keyFrame) => {
+    confirm.require({
+        target: event.currentTarget,
+        message: '确定要删除当前关键帧吗？',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: '取消',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: '确认删除'
+        },
+        accept:async () => {
+            animation.value.keyFrames = animation.value.keyFrames.filter(item => item.id !== keyFrame.id)
+            await $fetch(`/api/animations/${route.params.id}`, {
+                method: 'POST',
+                body: {
+                    animation: animation.value
+                }
+            })
+            toast.add({ severity: 'success', summary: '成功', detail: `你已成功删除当前关键帧`, life: 1000 });
+        },
+        reject: () => {
+            toast.add({ severity: 'info', summary: '取消', detail: '你已经取消了删除操作', life: 3000 });
+        }
+    });
+
+
+}
 const playAnimation = () => {
     let index = 1;
     let frame = animation.value.keyFrames[0]
-    send(JSON.stringify(frame))
+    send(JSON.stringify({frame:frame.data, type:'setup'}))
     const intervalId = setInterval(() => {
         if (index < animation.value.keyFrames.length) {
             let frame = animation.value.keyFrames[index]
-            send(JSON.stringify(frame))
+            send(JSON.stringify({frame:frame.data, type:'setup'}))
             index++;
         } else {
             clearInterval(intervalId);
@@ -242,7 +273,7 @@ import { useDraggable } from '@vueuse/core'
 import { nanoid } from 'nanoid';
 const floatPanel = ref(null)
 const { x, y, style } = useDraggable(floatPanel, {
-    initialValue: { x:1300, y: 300 },
+    initialValue: { x: 1300, y: 300 },
 })
 </script>
 
