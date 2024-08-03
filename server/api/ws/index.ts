@@ -1,4 +1,4 @@
-let devices ={}
+let devices = {}
 let devicePeers = {}
 
 
@@ -11,17 +11,24 @@ export default defineWebSocketHandler({
         console.log(`[${message.type}  message]`, message);
         if (message.type === 'device') {
             devices[message.id] = { ...message, updateTime: new Date().getTime() }
-            devicePeers[message.id] = peer
+            devicePeers[message.id] = peer 
         }
         if (message.type === 'getDevices') {
             peer.send(JSON.stringify({ type: 'devices', devices }))
         }
         if (message.type === 'setup') {
-           let frame = message.frame
-           console.log(frame)
-           frame.forEach(d => {
-              devicePeers[d.id].send(JSON.stringify({ type: 'setup', ...d }))
-           })
+            console.log(devices)
+            console.log(devicePeers)
+            let frame = message.frame
+            console.log(frame)
+            frame.forEach(d => {
+                if (!devices[d.id]) {
+                    return
+                }
+                console.log(d.id)
+                console.log(d)
+                devicePeers[d.id].send(JSON.stringify({ type: 'setup', ...d }))
+            })
         }
     },
 

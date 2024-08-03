@@ -41,7 +41,7 @@
                     </Button>
                 </div>
             </div>
-            <div class="text-primary text-center text-sm font-bold">设备{{ index + 1 }}</div>
+            <div class="text-primary text-center text-sm font-bold">设备{{ index  }}</div>
         </div>
     </div>
 
