@@ -1,6 +1,6 @@
 <template>
    <div class="mt-8 grid grid-cols-4 gap-4">
-       <NuxtLink v-for="(animation, index) in animations" :key="index" :to="`/animations/${animation.id}`">
+       <NuxtLink v-for="(animation, index) in animations" :key="index" :to="`./animations/${animation.id}`">
            <div
                class="flex  border px-8  items-center group justify-between gap-4 p-4 rounded-xl border-1 border-primary dark:border-surface-600 hover:bg-primary hover:text-white">
                <i class="pi pi-slack text-primary text-3xl group-hover:text-white group-hover:border-0"></i>
@@ -38,7 +38,7 @@ const toast = useToast();
 const route = useRoute();
 const confirm = useConfirm();
 
-const { data:animations, refresh: updatePage } = await useFetch(`/api/animations`)
+const { data:animations, refresh: updatePage } = await useFetch(`./api/animations`)
 
 const visible = ref(false);
 
@@ -59,7 +59,7 @@ const create = async() => {
    updatePage()
 }
 
-const { data, error, execute: postAnimationData } = await useFetch(`/api/animations`, {
+const { data, error, execute: postAnimationData } = await useFetch(`./api/animations`, {
    method: 'POST',
    body,
    immediate: false,
@@ -85,7 +85,7 @@ const deleteAnimation = (animation) => {
 
        accept: () => {
 
-           $fetch(`/api/animations`, {
+           $fetch(`./api/animations`, {
                method: 'DELETE',
                body: { id:animation.id }
            })

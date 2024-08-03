@@ -17,16 +17,12 @@ export default defineWebSocketHandler({
             peer.send(JSON.stringify({ type: 'devices', devices }))
         }
         if (message.type === 'setup') {
-            console.log(devices)
-            console.log(devicePeers)
             let frame = message.frame
             console.log(frame)
             frame.forEach(d => {
                 if (!devices[d.id]) {
                     return
                 }
-                console.log(d.id)
-                console.log(d)
                 devicePeers[d.id].send(JSON.stringify({ type: 'setup', ...d }))
             })
         }

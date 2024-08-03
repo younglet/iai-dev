@@ -103,7 +103,7 @@
 
 
 import { useWebSocket } from '@vueuse/core'
-const { send } = useWebSocket('ws://192.168.11.11:3000/api/ws')
+const { send } = useWebSocket('ws://localhost:3000/api/ws')
 const toast = useToast();
 const confirm = useConfirm()
 
@@ -118,7 +118,7 @@ const frame =
 
 const saveFrametoKeyFrames = async () => {
     animation.value.keyFrames.push({ id: nanoid(), data: frame.value.map(item => ({ ...item })) })
-    await $fetch(`/api/animations/${route.params.id}`, {
+    await $fetch(`./api/animations/${route.params.id}`, {
         method: 'POST',
         body: {
             animation: animation.value
