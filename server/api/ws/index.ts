@@ -1,8 +1,8 @@
 let devices = {}
-let devicePeers = {}
+let devicePeers = {} 
 
 
-export default defineWebSocketHandler({
+export default defineWebSocketHandler({ 
     open(peer) {
         console.log("[ws] open", peer);
     },
