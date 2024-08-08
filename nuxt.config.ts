@@ -1,8 +1,4 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-
-import { createStorage } from "unstorage";
-import fsDriver from "unstorage/drivers/fs";
-
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
@@ -13,7 +9,7 @@ export default defineNuxtConfig({
     },
     importPT: { as: 'Aura', from: '~/presets/aura' }
   },
-  nitro: {
+  nitro:  {
     storage: {
       db: {
         driver: 'memory',
