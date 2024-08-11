@@ -1,5 +1,5 @@
 <template>
-  <div class="p-12 select-none">
+  <div class="p-12 select-none h-screen w-screen">
     <Toast />
     <ConfirmDialog />
     <NuxtPage />

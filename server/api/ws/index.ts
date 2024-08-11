@@ -1,37 +1,28 @@
-let devices = {}
-let devicePeers = {} 
-
-
-export default defineWebSocketHandler({ 
-    open(peer) {
+let status = { id: null, triggered: false }
+export default defineWebSocketHandler({
+    open(peer: WebSocket) {
         console.log("[ws] open", peer);
     },
     async message(peer, message) {
         message = JSON.parse(message.text())
         console.log(`[${message.type}  message]`, message);
         if (message.type === 'device') {
-            devices[message.id] = { ...message, updateTime: new Date().getTime() }
-            devicePeers[message.id] = peer 
+            if (message.triggered) {
+                console.log(status);
+                status.id = message.id
+                status.triggered = true
+            }
         }
-        if (message.type === 'getDevices') {
-            peer.send(JSON.stringify({ type: 'devices', devices }))
-        }
-        if (message.type === 'setup') {
-            let frame = message.frame
-            console.log(frame)
-            frame.forEach(d => {
-                if (!devices[d.id]) {
-                    return
-                }
-                devicePeers[d.id].send(JSON.stringify({ type: 'setup', ...d }))
-            })
+        if (message.type === 'frontEnd') {
+            console.log(status);
+            peer.send(JSON.stringify(status))
+            status = { id: null, triggered: false }
         }
     },
 
     close(peer, event) {
         console.log("[ws] close", peer, event);
     },
-
     error(peer, error) {
         console.log("[ws] error", peer, error);
     },
